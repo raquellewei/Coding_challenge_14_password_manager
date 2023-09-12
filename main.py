@@ -2,11 +2,15 @@ from tkinter import *
 from tkinter import messagebox
 from random import randint, choice, shuffle
 import pyperclip
+import json
+
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
-#Password Generator Project
+# Password Generator Project
 def generate_password():
-    letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u',
+               'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+               'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
     numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     symbols = ['!', '#', '$', '%', '&', '(', ')', '*', '+']
 
@@ -20,23 +24,60 @@ def generate_password():
     password_box.insert(0, password)
     pyperclip.copy(password)
 
+
 # ---------------------------- SAVE PASSWORD ------------------------------- #
-file = 'data.txt'
 def save_password():
     password = password_box.get()
-    website = website_box.get()
+    website = website_box.get().capitalize()
     username = email_box.get()
+    new_data = {
+        website: {
+            "email": username,
+            "password": password,
+        }
+    }
 
     if len(password) < 1 or len(website) < 1 or len(username) < 1:
         messagebox.showinfo(title='Oops!', message="Please don't leave any fields empty!")
     else:
-        is_ok = messagebox.askokcancel(title=website, message=f"These are the details entered: \nUsername: {username}"
-                                                            f"\nPassword: {password} \nIs it ok to save?")
-        if is_ok:
-            with open(file, 'a') as f:
-                f.write(f"{website} | {username} | {password}\n")
+        try:
+            with open('data.json', 'r') as f:
+                data = json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError):
+            with open('data.json', 'w') as f:
+                json.dump(new_data, f, indent=4)
+        else:
+            data.update(new_data)
+            with open('data.json', 'w') as f:
+                json.dump(data, f, indent=4)
+        finally:
             password_box.delete(0, END)
             website_box.delete(0, END)
+
+
+# -----------------------------SEARCH-----------------------------------#
+def search():
+    try:
+        with open('data.json', 'r') as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        messagebox.showinfo(title="Error", message="No Data File Found.", icon="error")
+    except json.JSONDecodeError:
+        messagebox.showinfo(title="Error", message="Nothing has been saved yet.", icon="error")
+    else:
+        website = website_box.get().capitalize()
+        if len(website) == 0:
+            pass
+        else:
+            if website in data:
+                credentials = data[website]
+                email = credentials["email"]
+                password = credentials["password"]
+                messagebox.showinfo(title=website, message=f"Email: {email}\nPassword: {password}")
+            else:
+                messagebox.showinfo(title="Error", message="No details for the website exists.", icon="error")
+
+
 
 # ---------------------------- UI SETUP ------------------------------- #
 window = Tk()
@@ -46,13 +87,13 @@ window.config(bg='white')
 
 website_label = Label(text="Website:", bg="white")
 website_label.grid(row=1, column=0)
-website_box = Entry(width=36, bg="white", highlightthickness=0)
-website_box.grid(row=1, column=1, columnspan=2, sticky="EW")
+website_box = Entry(bg="white", highlightthickness=0)
+website_box.grid(row=1, column=1, columnspan=1, sticky="EW")
 website_box.focus()
 
 email_label = Label(text="Email/Username:", bg="white")
 email_label.grid(row=2, column=0)
-email_box = Entry(width=36, bg="white", highlightthickness=0)
+email_box = Entry(bg="white", highlightthickness=0)
 email_box.grid(row=2, column=1, columnspan=2, sticky="EW")
 email_box.insert(0, 'weimaomao_3@hotmail.com')
 
@@ -68,10 +109,12 @@ generate_button.grid(row=3, column=2, sticky="EW")
 add_button = Button(text="Add", highlightbackground="white", borderwidth=0.5, command=save_password)
 add_button.grid(row=4, column=1, columnspan=2, sticky="EW")
 
+search_button = Button(text="Search", highlightbackground="white", borderwidth=0.5, command=search)
+search_button.grid(row=1, column=2, sticky="EW")
+
 canvas = Canvas(width=200, height=200, bg='white', highlightthickness=0)
 logo_img = PhotoImage(file="logo.png")
 canvas.create_image(100, 100, image=logo_img)
 canvas.grid(row=0, column=1)
-
 
 window.mainloop()
