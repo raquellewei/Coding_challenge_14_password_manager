@@ -61,9 +61,9 @@ def search():
         with open('data.json', 'r') as f:
             data = json.load(f)
     except FileNotFoundError:
-        messagebox.showinfo(title="Error", message="No Data File Found.", icon="error")
+        messagebox.showwarning(title="Error", message="No Data File Found.")
     except json.JSONDecodeError:
-        messagebox.showinfo(title="Error", message="Nothing has been saved yet.", icon="error")
+        messagebox.showwarning(title="Error", message="Nothing has been saved yet.")
     else:
         website = website_box.get().capitalize()
         if len(website) == 0:
@@ -75,7 +75,7 @@ def search():
                 password = credentials["password"]
                 messagebox.showinfo(title=website, message=f"Email: {email}\nPassword: {password}")
             else:
-                messagebox.showinfo(title="Error", message="No details for the website exists.", icon="error")
+                messagebox.showwarning(title="Error", message="No details for the website exists.")
 
 
 
